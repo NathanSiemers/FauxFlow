@@ -1,0 +1,71 @@
+# `r a.title`
+
+### *Nathan Siemers, Bristol-Myers Squibb*
+
+`r Sys.Date()`
+
+```{r , results = 'asis', echo = FALSE }
+
+library(knitr)
+
+```
+
+### Cohort, Gating: `r my.title(input)`
+
+### Genes plotted: `r input$geneplot`
+
+### `r default.filterby`: `r paste(input$filteredby, collapse = ';')`
+
+
+*`r paste("PI:", a.PI)`*
+
+*`r paste("Contributors:", a.credits )`*
+
+
+`r a.desc`
+
+`r a.methods`
+
+## Fauxflow Plot
+
+```{r plot1, dpi = 100, fig.width = 20, fig.height = 20, warning = FALSE, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
+
+fun_plot1(l.input)
+
+```
+
+```{r , echo = FALSE, results = 'asis'}
+
+if ( input$maketable ) {
+    cat('\n\n##Table of correlations.\n\n')
+}
+
+```
+
+```{r , echo = FALSE, results = 'show'}
+
+if ( input$maketable ) {
+
+kable( fun_table1(input) )
+
+}
+
+
+
+```{r, echo = FALSE, results = 'asis'}
+
+if ( input$combogates ) {
+    cat('\n\n##Population table.\n\n')
+
+}
+
+```
+
+```{r , echo = FALSE, results = 'show'}
+
+if ( input$combogates ) {
+    kable( combogates(input) )
+}
+
+
+```
