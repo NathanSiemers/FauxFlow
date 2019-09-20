@@ -55,6 +55,7 @@ shinyUI(
         conditionalPanel (
             condition = 'input.maketable == true',
             h3('Table of correlations and anti-correlations'),
+            downloadButton('cortable', 'Download Correlations'),
             withSpinner(proxy.height = '200px',
                         tableOutput( "table1" ) )
             ),

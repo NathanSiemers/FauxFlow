@@ -74,10 +74,9 @@ bestcor = function (gene, my.dat, n = 10) {
     best.cor
 }
 
-
-fun_table1 = function (input, plot1.data = sc_env$data) {
+fun_table1 = function (input, plot1.data = sc_env$data, n = 10) {
     if ( length( input$genelist)  < 2 ) return ( NULL )
-    if(input$maketable) {
+    ##if(input$maketable) {
         plot1.data = plot1.data [ plot1.data[ , sc_env$default.filterby] %in% input$filtervalues, ]
         for (i in input$posgate) {
             plot1.data = posgate(plot1.data, i)
@@ -86,13 +85,32 @@ fun_table1 = function (input, plot1.data = sc_env$data) {
             plot1.data = neggate(plot1.data, i)
         }
         plyr::ldply(input$genelist, function(i) {
-            out = bestcor(i, plot1.data)
+            out = bestcor(i, plot1.data, n = n)
             out$gene = i
             out$Hit = rownames(out)
             data.frame(Query = i, Hit = rownames(out), Cor = out[, 1])
         })
-    }
+    ##}
 }
+
+## fun_table1 = function (input, plot1.data = sc_env$data) {
+##     if ( length( input$genelist)  < 2 ) return ( NULL )
+##     if(input$maketable) {
+##         plot1.data = plot1.data [ plot1.data[ , sc_env$default.filterby] %in% input$filtervalues, ]
+##         for (i in input$posgate) {
+##             plot1.data = posgate(plot1.data, i)
+##         }
+##         for (i in input$neggate) {
+##             plot1.data = neggate(plot1.data, i)
+##         }
+##         plyr::ldply(input$genelist, function(i) {
+##             out = bestcor(i, plot1.data)
+##             out$gene = i
+##             out$Hit = rownames(out)
+##             data.frame(Query = i, Hit = rownames(out), Cor = out[, 1])
+##         })
+##     }
+## }
 
 combogates = function( input, pairdat = sc_env$data, ...  ) {
     genelist = input$genelist
@@ -218,6 +236,12 @@ shinyServer (
             content = function(file) {
                 write.csv(  combogates(reactiveValuesToList(input)), file, row.names = FALSE )
             })
+        output$cortable = downloadHandler(
+            filename = function () { return("cortable.csv") },
+            content = function(file) {
+                write.csv(  fun_table1(reactiveValuesToList(input), n = 1000), file, row.names = FALSE )
+            })
+
         ## a console generally good for debugging
         output$print1 = renderPrint({
             print(reactiveValuesToList(input) )

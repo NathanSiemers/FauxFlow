@@ -83,8 +83,9 @@ gggpairs = function(dat, colorby = NULL, showlower = TRUE,
     p =  ggpairs( dat, cardinality_threshold = 30,
         diag = list(continuous ="densityDiag", discrete = "barDiag", na = "naDiag"),
         lower = lower.list,
-        upper = upper.list,
-                 threshold = threshold)
+        upper = upper.list
+        )
+##                 threshold = threshold)
     p
 }
 
@@ -203,6 +204,8 @@ barDiag_fn = function(data, mapping, colorby = NULL, ...) {
     }
     mapping <- mapping_color_to_fill(mapping)
     mapping$y <- NULL
+    ## remove ggplot warning about threshold being an aesthetic
+    mapping$threshold = NULL
     x_data <- eval_data_col(data, mapping$x)
     numer <- ("continuous" == plotting_data_type(x_data))
     p <- ggplot(data = data, mapping)
@@ -241,6 +244,8 @@ facetbar_fn = function(data, mapping, colorby = NULL, ...) {
     mapping <- mapping_color_to_fill(mapping)
     yVal <- mapping_string(mapping$y)
     mapping$y <- NULL
+    ## remove ggplot warning about threshold being an aesthetic
+    mapping$threshold = NULL
     p <- ggplot(data, mapping) + geom_bar(...) + facet_grid(paste(yVal, 
         " ~ .", sep = ""))
     p = p +
@@ -262,7 +267,9 @@ box_no_facet_fn = function(data, mapping, colorby = NULL, ...) {
     horizontal <- is_horizontal(data, mapping)
     if (horizontal) {
     mapping <- mapping_swap_x_y(mapping)
-  }
+}
+    ## remove ggplot warning about threshold being an aesthetic
+    mapping$threshold = NULL
     p <- ggplot(data = data)
     if (TRUE) {
         p <- p + geom_boxplot(mapping, ...)
@@ -304,6 +311,8 @@ facethist_fn = function (data, mapping, colorby = NULL, ...) {
     xVal <- mapping_string(mapping$x)
     yVal <- mapping_string(mapping$y)
     mapping$y <- NULL
+    ## remove ggplot warning about threshold being an aesthetic
+    mapping$threshold = NULL
     p <- ggplot(data = data, mapping)
     p <- p + stat_bin(...)
     if (horizontal) {
@@ -332,6 +341,8 @@ contour_fn  = function(data, mapping, size_adjust = 1, monochrome = FALSE, ...){
     colorby = matchcall$colorby
     threshold = matchcall$threshold
     rownumber = nrow(data)
+    ## remove ggplot warning about threshold being an aesthetic
+    mapping$threshold = NULL
     p <- ggplot(data = data, mapping = mapping) +
         stat_density_2d(aes(fill = log2( stat(level) )  , alpha = ..level..  ) , bins = rownumber /55, geom = 'polygon')
     ## colors are tricky, have to see if color variable is continuous or factor
@@ -341,7 +352,7 @@ contour_fn  = function(data, mapping, size_adjust = 1, monochrome = FALSE, ...){
         p = p + scale_fill_viridis(option = 'plasma')
     }
     p = add_continuous_labels(p, size_adjust = size_adjust)
-    p =  add_continuous_quadrants(p, size_adjust = size_adjust, threshold = threshold)
+    ##p =  add_continuous_quadrants(p, size_adjust = size_adjust, threshold = threshold)
     p = add_gate_line(p, threshold = threshold)
 }
 
@@ -365,6 +376,8 @@ points_fn = function(data, mapping, ...) {
     ##print(paste('colorby', colorby) )
     point_size = 12 * size_adjust
     ##print(mapping)
+    ## remove ggplot warning about threshold being an aesthetic
+    mapping$threshold = NULL
     p = ggplot(data = data, mapping = mapping) +
         geom_point(aes_string(fill = colorby), color = 'grey80', size = point_size, shape = 21, alpha = 0.5)
     p = add_continuous_labels(p, size_adjust = size_adjust)
@@ -401,6 +414,9 @@ points_and_contour_fn  = function(data, mapping, ...) {
     point_size = 12 * size_adjust
     data$density = get_density( data[, x ]  , data[, y ], n = 300 )
     rownumber = nrow(data)
+    ## remove ggplot warning about threshold being an aesthetic
+    mapping$threshold = NULL
+    ##warning(mapping)
     p = ggplot(data = data, mapping = mapping) +
         stat_density_2d(aes(fill = log2( stat(level) )  , alpha = ..level..  ) , bins = rownumber / 5, geom = 'polygon') +
             geom_point(aes(fill = log2(density) ), color = "white", alpha = 0.3, size = point_size, shape = 21, color = "black" )
@@ -432,6 +448,8 @@ points_density_fn = function(data, mapping, ...){
     charmap = gsub( '~', '', as.character(mapping))
     x = charmap[[1]]
     y = charmap[[2]]
+    ## remove ggplot warning about threshold being an aesthetic
+    mapping$threshold = NULL
     data$density = get_density( data[, x ]  , data[, y ], n = 300 )
     p = ggplot(data = data, mapping = mapping) +
         geom_point(aes(fill = log2(density) ), color = "white", alpha = 0.3, size = point_size, shape = 21, color = "black" )
