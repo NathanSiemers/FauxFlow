@@ -422,7 +422,7 @@ points_and_contour_fn  = function(data, mapping, ...) {
             geom_point(aes(fill = log2(density) ), color = "white", alpha = 0.3, size = point_size, shape = 21, color = "black" )
     p = p + scale_fill_viridis(option = 'plasma')
     p = add_continuous_labels(p, size_adjust = size_adjust)
-    p =  add_continuous_quadrants(p, size = size_adjust, threshold = threshold)
+    ##p =  add_continuous_quadrants(p, size = size_adjust, threshold = threshold)
     p = add_gate_line(p, threshold = threshold )
     p
 }

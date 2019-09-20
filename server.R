@@ -76,7 +76,7 @@ bestcor = function (gene, my.dat, n = 10) {
 
 fun_table1 = function (input, plot1.data = sc_env$data, n = 10) {
     if ( length( input$genelist)  < 2 ) return ( NULL )
-    ##if(input$maketable) {
+    if(input$maketable) {
         plot1.data = plot1.data [ plot1.data[ , sc_env$default.filterby] %in% input$filtervalues, ]
         for (i in input$posgate) {
             plot1.data = posgate(plot1.data, i)
@@ -90,7 +90,7 @@ fun_table1 = function (input, plot1.data = sc_env$data, n = 10) {
             out$Hit = rownames(out)
             data.frame(Query = i, Hit = rownames(out), Cor = out[, 1])
         })
-    ##}
+    }
 }
 
 ## fun_table1 = function (input, plot1.data = sc_env$data) {
