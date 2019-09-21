@@ -2,9 +2,20 @@
 
 Nathan Siemers
 
-![alt text](https://github.com/NathanSiemers/FauxFlow/blob/master/image.example.png) 
+![alt text](https://github.com/NathanSiemers/FauxFlow/blob/master/image.example.png)
+(data from Villani et al. DOI: 10.1126/science.aah4573)
 
 ## How to use Fauxflow
+
+### testing the application
+
+I have serveral data sets available for interrogation if you want to quickly test out functionality. 
+
+http://shiny.fiveprime.org/Shiny/SCHCC (Zheng et al. Liver cancer T cells)
+http://shiny.fiveprime.org/Shiny/SCMel (Tirosh et al. Melanoma)
+http://shiny.fiveprime.org/Shiny/SCBlood (Villani et al. Blood Myeloid)
+
+## Installing FauxFlow 
 
 ### library dependencies:
 
@@ -12,6 +23,7 @@ Nathan Siemers
 
 The *data.table* package is also used during the process of data set construction.
 
+### Clone this repository
 
 ### out of the box: Zheng HCC data
 
@@ -21,7 +33,7 @@ If you have a shiny server available, the tool should be ready for use with the 
 
 *R -e 'shiny::runApp("./", port=8888, host="0.0.0.0")'*
 
-### adding your own data sets
+### Customization: adding your own data sets
 
 copy Data/defaults.R.template to Data/defaults.R
 
