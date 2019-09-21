@@ -45,7 +45,7 @@ shinyUI(
             downloadButton('dlknitr', 'Download Report')
             ),
         withSpinner(uiOutput("filters"), proxy.height = '100px'),
-        inline(sliderInput("threshold", label = h6("Gate Point (single value applied to all gates) "), min = 0, max = 4, value = 1, step = 0.1)),
+        inline(sliderInput("threshold", label = h6("Gate Point (single value applied to all gates) "), min = 0, max = 12, value = 1, step = 0.1)),
         inline( sliderInput("noise", label = h6("Added Noise"), min = 0, max = 1, value = 0.15, step = 0.025) ),
         br(),
         inline(checkboxInput("maketable", "Report table of correlations of query genes to all genes in genome, given the current gating")),
