@@ -2,6 +2,8 @@
 
 Nathan Siemers
 
+![alt text](https://github.com/NathanSiemers/FauxFlow/blob/master/image.example.png) 
+
 ## How to use Fauxflow
 
 ### library dependencies:
