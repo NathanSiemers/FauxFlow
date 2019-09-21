@@ -39,6 +39,8 @@ If you have a shiny server available, the tool should be ready for use with the 
 
 copy Data/defaults.R.template to Data/defaults.R
 
+*Note: Once you create defaults.R, it will automatically be sourced instead of defaults.R.template to configure the deployment*
+
 edit Data/defaults.R:
 
 * Fill in appropriate background information about the data set.
@@ -47,7 +49,7 @@ edit Data/defaults.R:
 
 The loader should return a single data frame of combined rna-seq and clinical information (genes and clinical categories in columns).  There's almost always some tweaking to do.
 
-* Finally: set TESTING to FALSE in global.R, this will source your new Data/defaults.R instead of defaults.template.R
+
 
 
 
