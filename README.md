@@ -59,7 +59,7 @@ The graphics engine for FauxFlow is contained here in the *allpairs()* and under
 
 ## Code updates
 
-You should be able to update FauxFlow from the git repository without harming things, as long as you have made a custom Data/defaults.R file. The only thing that needs editing after an update is setting TESTING = FALSE in globals.R, so that your custom data is used.
+You should be able to update FauxFlow from the git repository without harming things, as long as you have made a custom Data/defaults.R file. 
 
 ## Limitations, things to improve
 
