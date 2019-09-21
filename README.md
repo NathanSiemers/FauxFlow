@@ -9,11 +9,13 @@ Nathan Siemers
 
 ### testing the application
 
-I have serveral data sets available for interrogation if you want to quickly test out functionality. 
+I have several data sets available for interrogation on the internet if you want to quickly test out functionality. They are on a small server, so performance may be limited.
 
 http://shiny.fiveprime.org/SCHCC (Zheng et al. Liver cancer T cells)
-http://shiny.fiveprime.org/SCMel (Tirosh et al. Melanoma)
-http://shiny.fiveprime.org/SCBlood (Villani et al. Blood Myeloid)
+
+http://shiny.fiveprime.org/SCMel (Tirosh et al. Melanoma tumor, immune, and stroma)
+
+http://shiny.fiveprime.org/SCBlood (Villani et al. Normal Human Blood Myeloid)
 
 ## Installing FauxFlow 
 
