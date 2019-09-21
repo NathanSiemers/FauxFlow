@@ -11,9 +11,9 @@ Nathan Siemers
 
 I have serveral data sets available for interrogation if you want to quickly test out functionality. 
 
-http://shiny.fiveprime.org/Shiny/SCHCC (Zheng et al. Liver cancer T cells)
-http://shiny.fiveprime.org/Shiny/SCMel (Tirosh et al. Melanoma)
-http://shiny.fiveprime.org/Shiny/SCBlood (Villani et al. Blood Myeloid)
+http://shiny.fiveprime.org/SCHCC (Zheng et al. Liver cancer T cells)
+http://shiny.fiveprime.org/SCMel (Tirosh et al. Melanoma)
+http://shiny.fiveprime.org/SCBlood (Villani et al. Blood Myeloid)
 
 ## Installing FauxFlow 
 
