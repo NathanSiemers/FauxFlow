@@ -34,7 +34,7 @@ shinyUI(
         br(),
         inline(radioButtons('drawupper', "Upper Graphs", inline = TRUE, choices= c('Points', 'Contour', 'Both'), selected = 'Points' )),
         HTML(nbsp(5)),
-        inline(radioButtons('drawlower', "Lower Graphs", inline = TRUE, choices= c('Points', 'Contour', 'Both', 'None'), selected = 'Contour' )),
+        inline(radioButtons('drawlower', "Lower Graphs", inline = TRUE, choices= c('Points', 'Contour', 'Both', 'None'), selected = 'Both' )),
         br(),
         actionButton('go', "Plot"),
         br(),
