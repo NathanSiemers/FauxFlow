@@ -1,8 +1,9 @@
-TESTING = TRUE
+##TESTING = TRUE
+##if(TESTING) {
 
-if(TESTING) {
-    source('Data/defaults.template.R')
+if( file.exists('Data/defaults.R') ) {
+   source('Data/defaults.R')
 } else {
-    source('Data/defaults.R')
+    source('Data/defaults.template.R')
 }
 
