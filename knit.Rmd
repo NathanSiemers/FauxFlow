@@ -1,6 +1,6 @@
-# `r a.title`
+# `r sc_env$title`
 
-### *Nathan Siemers, Bristol-Myers Squibb*
+### *Nathan Siemers*
 
 `r Sys.Date()`
 
@@ -12,25 +12,28 @@ library(knitr)
 
 ### Cohort, Gating: `r my.title(input)`
 
-### Genes plotted: `r input$geneplot`
+### Genes plotted: `r input$genelist`
 
-### `r default.filterby`: `r paste(input$filteredby, collapse = ';')`
-
-
-*`r paste("PI:", a.PI)`*
-
-*`r paste("Contributors:", a.credits )`*
+### `r sc_env$default.filterby`: `r paste(input$filtervalues, collapse = ';')`
 
 
-`r a.desc`
+*`r paste("PI:", sc_env$PI)`*
 
-`r a.methods`
+*`r paste("Contributors:", sc_env$credits )`*
+
+
+`r sc_env$desc`
+
+`r sc_env$methods`
 
 ## Fauxflow Plot
 
 ```{r plot1, dpi = 100, fig.width = 20, fig.height = 20, warning = FALSE, results = 'hide', echo = FALSE, message = FALSE, warning = FALSE}
 
-fun_plot1(l.input)
+warning('plotting')
+warning(l.input)
+##fun_plot1(l.input)
+fun_plot1(input)
 
 ```
 

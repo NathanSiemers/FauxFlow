@@ -228,7 +228,8 @@ shinyServer (
             filename = function () { return("mytiff.tiff") },
             content = function(file) {
                 tiff(filename = file, res = 300, width = 4000, height = 4000,  compression = 'lzw', units = 'px')
-                print(fun_plot1(reactiveValuesToList(input)))
+                ##print(fun_plot1(reactiveValuesToList(input)))
+                print(fun_plot1(input))
                 dev.off()
             })
         output$combotable = downloadHandler(
