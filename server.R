@@ -1,4 +1,6 @@
 library(shiny)
+library(Matrix)
+library(qlcMatrix)
 ##
 source('lib/scplotlib/scplotlib.R')
 ## we have a bad dependency of scplotlib on a function below :(
@@ -37,11 +39,36 @@ my.title = function(input) {
 ## then we can unwrap to send to a real plotting function
 ## goal - underlying functions don't need to know about shiny
 
+typeofmatrix = function(x) {
+    if( class(x) == 'dgTMatrix' | class(x) == 'dgCMatrix'  )  {
+        return('sparse')
+    } else {
+        return('normal')
+    }
+}
+    
+
 fun_plot1 = function (input, plot1.data =  sc_env$data, default.filterby = sc_env$default.filterby, clin.cols = sc_env$clin.cols ) {
     if ( length( c(input$genelist, input$colorby) )  < 2  ) return ( NULL )
-    ## we really need to 
-    ## filter rows 
-    plot1.data = plot1.data [ plot1.data[ , default.filterby] %in% input$filtervalues, ]
+################################################################
+    ## get rid of sparse matrix immediately
+    if( typeofmatrix(plot1.data)  == 'sparse' ) {
+        print("Sparse matrix detected")
+        to_get = c( input$genelist, input$posgate, input$neggate, input$colorby, input$default.filterby )
+        print(dim(plot1.data))
+        plot1.data = as.data.frame( as.matrix( plot1.data[ , colnames(plot1.data) %in% to_get ] ), stringsAsFactors = FALSE )
+        plot1.data = plot1.data + 0
+        plot1.data = log2(plot1.data + 1)
+        print(dim(plot1.data))
+        print(head(plot1.data))
+    }
+################################################################    
+    ## filter rows
+    if( !is.null(default.filterby) ) {
+        print(dim(plot1.data))
+        plot1.data = plot1.data [ plot1.data[ , default.filterby] %in% input$filtervalues, ]
+        print(dim(plot1.data))
+    }
     ## perform positive and negative gating
     for (i in input$posgate) {
         plot1.data = posgate(plot1.data, i, input$threshold)
@@ -53,7 +80,11 @@ fun_plot1 = function (input, plot1.data =  sc_env$data, default.filterby = sc_en
     ## this is the real plotting function
     ##    allpairs(input$genelist, pairdat = plot1.data, colorby = input$colorby, title = my.title(input), threshold = input$threshold, noise = input$noise)
     ## prepare argument list to do.call()
-    arguments = reactiveValuesToList(input)
+    if(! is.list(input) ) {
+        arguments = reactiveValuesToList(input)
+    } else {
+        arguments = input
+    }
     ## see if we to massage to change "" to NULLs
     arguments = sapply(arguments, chblnl)
     arguments$pairdat = plot1.data
@@ -64,9 +95,13 @@ fun_plot1 = function (input, plot1.data =  sc_env$data, default.filterby = sc_en
 
 
 bestcor = function (gene, my.dat, n = 10) {
-    ind = sapply(my.dat, is.numeric)
-    my.dat = my.dat[, ind]
-    best.cor = as.data.frame(t(cor( my.dat[ , gene], my.dat)))
+    if( typeofmatrix(my.dat) == 'sparse' ) {
+        best.cor = as.data.frame(t( cosSparse( my.dat[ , gene, drop = FALSE], my.dat)))
+    } else {
+        ind = sapply(my.dat, is.numeric)
+        my.dat = my.dat[, ind]
+        best.cor = as.data.frame(t(cor( my.dat[ , gene], my.dat)))
+    }
     colnames(best.cor) = c('Correlation')
     best.cor = best.cor[order( best.cor$Correlation, decreasing = TRUE ), , drop=FALSE]
     best.cor = best.cor[! is.na(best.cor$Correlation), , drop = FALSE]
@@ -77,13 +112,13 @@ bestcor = function (gene, my.dat, n = 10) {
 fun_table1 = function (input, plot1.data = sc_env$data, n = 10) {
     if ( length( input$genelist)  < 2 ) return ( NULL )
     if(input$maketable) {
-        plot1.data = plot1.data [ plot1.data[ , sc_env$default.filterby] %in% input$filtervalues, ]
-        for (i in input$posgate) {
-            plot1.data = posgate(plot1.data, i)
-        }
-        for (i in input$neggate) {
-            plot1.data = neggate(plot1.data, i)
-        }
+##        plot1.data = plot1.data [ plot1.data[ , sc_env$default.filterby] %in% input$filtervalues, ]
+        ## for (i in input$posgate) {
+        ##     plot1.data = posgate(plot1.data, i)
+        ## }
+        ## for (i in input$neggate) {
+        ##     plot1.data = neggate(plot1.data, i)
+        ## }
         plyr::ldply(input$genelist, function(i) {
             out = bestcor(i, plot1.data, n = n)
             out$gene = i
@@ -177,11 +212,13 @@ shinyServer (
             incProgress(message = 'filters')
             output$filters =
                 renderUI ( {
-                    checkboxGroupInput("filtervalues", sc_env$default.filterby,
+                    if (!is.null(sc_env$default.filterby) ) {
+                        checkboxGroupInput("filtervalues", sc_env$default.filterby,
                                        choices = sort( unique(sc_env$data[ , sc_env$default.filterby]) ),
                                        selected = unique(sc_env$data[ , sc_env$default.filterby]),
                                        inline = TRUE
-                                       )
+                                           )
+                    }
                 } )
             fun_docx = function(my.input = input) {
                 paste0( 'fauxflow.docx' )
@@ -211,7 +248,10 @@ shinyServer (
         ## but if the above works
         ## why not this
         ## oh jesus, note the extra () to trigger the function call :( :(
-        output$plot1 = renderPlot({  eventReactive( input$go, { fun_plot1(input) } )()  })
+
+        observeEvent( input$go, {
+                    output$plot1 = renderPlot({  fun_plot1(input)  }) })
+##        output$plot1 = renderPlot({  eventReactive( input$go, { fun_plot1(input) } )()  })
         output$table1 =
             renderTable({  eventReactive( input$go, {
                 withProgress( message = 'Computing Correlations', {

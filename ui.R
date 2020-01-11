@@ -16,6 +16,10 @@ if( sc_env$cloudlink != "")  {
     cloud.html =  div(HTML(cloud.html), style = "float:right")
 } else { cloud.html = "" }
 
+default.gatepoint = 0.5 
+if(!is.null(sc_env$default.gatepoint)) { default.gatepoint = sc_env$default.gatepoint }
+
+
 
 shinyUI(
     fluidPage(
@@ -45,8 +49,8 @@ shinyUI(
             downloadButton('dlknitr', 'Download Report')
             ),
         withSpinner(uiOutput("filters"), proxy.height = '100px'),
-        inline(sliderInput("threshold", label = h6("Gate Point (single value applied to all gates) "), min = 0, max = 12, value = 1, step = 0.1)),
-        inline( sliderInput("noise", label = h6("Added Noise"), min = 0, max = 1, value = 0.15, step = 0.025) ),
+        inline(sliderInput("threshold", label = h6("Gate Point (single value applied to all gates) "), min = 0, max = 12, value = default.gatepoint, step = 0.1)),
+        inline( sliderInput("noise", label = h6("Added Noise"), min = 0, max = 1, value = 0.075, step = 0.025) ),
         br(),
         inline(checkboxInput("maketable", "Report table of correlations of query genes to all genes in genome, given the current gating")),
         inline(checkboxInput("combogates", "Report populations of all combinations of plotted genes")),

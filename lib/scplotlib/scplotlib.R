@@ -11,7 +11,6 @@ scale_fill_continuous = scale_fill_viridis(option = 'plasma')
 
 default_point_size = 2.5
 
-
 allpairs = function(genelist, pairdat, showlower = TRUE,
     maketable = FALSE, noise = 0.15,
     posgate = NULL, neggate = NULL, threshold = 1, filterby = NULL, colorby = NULL, 
@@ -51,26 +50,33 @@ allpairs = function(genelist, pairdat, showlower = TRUE,
     ## adjust size now that we know true dimensions
     size_adjust = 1 / ( ( ncol(pairdat) ** 0.5 ) * ( log10(nrow(pairdat)) ** 0.5 ) )
     ##
-    pairdat  = add_noise(pairdat, noise)
+    ##pairdat  = add_noise(pairdat, noise)
     colnames(pairdat) = gsub('-', '.', colnames(pairdat))
-    gggpairs(dat = pairdat, colorby = colorby,
+    gggpairs(dat = pairdat, colorby = colorby, noise = noise,
              ##mapping = aes_string(color = colorby, fill = colorby),
              showlower = showlower, threshold = threshold,
              upper_plotter = upper_plotter, lower_plotter = lower_plotter,
-             monochrome = monochrome, size_adjust = size_adjust)
+             monochrome = monochrome, size_adjust = size_adjust, dropzero = 'auto' )
 }
 
-gggpairs = function(dat, colorby = NULL, showlower = TRUE, 
-    title = "", threshold = 1, monochrome = FALSE, size_adjust = 1,
+gggpairs = function(dat, colorby = NULL, showlower = TRUE, noise = 0.15,
+    title = "", threshold = 1, monochrome = FALSE, size_adjust = 1, dropzero = NULL,
     lower_plotter = 'points_and_contour_fn', upper_plotter = 'points_fn') {
+    if( dropzero == 'auto' ) {
+        if( nrow(dat) > 15000 ) {
+            dropzero = TRUE
+        } else {
+            dropzero = FALSE
+        }
+    }
     lower_plotter = get(lower_plotter)
-    lower_plotter = wrap(lower_plotter, size_adjust = size_adjust, colorby = colorby, threshold = threshold)
+    lower_plotter = wrap(lower_plotter, size_adjust = size_adjust, colorby = colorby, threshold = threshold, noise = noise, dropzero = dropzero)
     ##print(lower_plotter)
     upper_plotter = get(upper_plotter)
-    upper_plotter = wrap(upper_plotter, size_adjust = size_adjust, colorby = colorby, threshold = threshold )
+    upper_plotter = wrap(upper_plotter, size_adjust = size_adjust, colorby = colorby, threshold = threshold, noise = noise, dropzero = dropzero )
     ##print(upper_plotter)
     facethist_plotter = wrap(facethist_fn, colorby = colorby)
-    box_no_facet_plotter = wrap(box_no_facet_fn, colorby = colorby)
+    box_no_facet_plotter = wrap(box_no_facet_fn, colorby = colorby, dropzero = dropzero)
     facetbar_plotter = wrap(facetbar_fn, colorby = colorby)
     barDiag_plotter = wrap(barDiag_fn, colorby = colorby)
     if(showlower) {
@@ -83,9 +89,9 @@ gggpairs = function(dat, colorby = NULL, showlower = TRUE,
     p =  ggpairs( dat, cardinality_threshold = 30,
         diag = list(continuous ="densityDiag", discrete = "barDiag", na = "naDiag"),
         lower = lower.list,
-        upper = upper.list
+        upper = upper.list,
+        dropzero = dropzero
         )
-##                 threshold = threshold)
     p
 }
 
@@ -132,7 +138,8 @@ get_density <- function(x, y, ...) {
 
 ################################################################
 
-add_continuous_quadrants = function(p, size_adjust = 1, threshold = 1) {
+add_continuous_quadrants = function(p, size_adjust = 1, threshold = 1, dropped = 0) {
+    warning(paste('quadrants points dropped:', dropped))
     base_size = 18
     ggpb <- ggplot_build(p)
     dat = ggpb$data[[1]]
@@ -142,13 +149,19 @@ add_continuous_quadrants = function(p, size_adjust = 1, threshold = 1) {
     maxy = ggpb$layout$panel_scales_y[[1]]$range$range[[2]]  # data range!
     ##print(paste('maxx', maxx, 'maxy', maxy))
     ##print(colnames(dat))
-    a11 = round (length( which ( dat[ , 'x'] < threshold & dat [ , 'y'] < threshold ) ) / all.points  ,  digits = 3 )
+    if( dropped > 1000 ) {
+        roundby = 6
+    } else { roundby = 3 }
+    a11 = round (
+        ( length( which ( dat[ , 'x'] < threshold & dat [ , 'y'] < threshold )  ) + dropped )  /
+            ( all.points + dropped ) ,
+                digits = roundby )
     ##print(a11)
-    a12 = round (length( which ( dat[ , 'y'] < threshold & dat [ , 'x'] >= threshold )) / all.points ,  digits = 3 )
+    a12 = round (length( which ( dat[ , 'y'] < threshold & dat [ , 'x'] >= threshold )) / (all.points + dropped),  digits = roundby )
     ##print(paste('a12', a12))
-    a21 = round (length( which ( dat[ , 'y'] >= threshold & dat [ , 'x'] < threshold )) / all.points ,  digits = 3 )
+    a21 = round (length( which ( dat[ , 'y'] >= threshold & dat [ , 'x'] < threshold )) / (all.points + dropped) ,  digits = roundby )
     ##print(paste('a21', a21))
-    a22 = round (length( which( dat[ , 'y'] >= threshold & dat [ , 'x'] >= threshold )) / all.points ,  digits = 3 )
+    a22 = round (length( which( dat[ , 'y'] >= threshold & dat [ , 'x'] >= threshold )) / (all.points + dropped) ,  digits = roundby )
     ##print(paste('a22', a22))
     p = p +
         annotate('label', x = 0.2, y = 0.2, label = a11, size = base_size * size_adjust) +
@@ -341,8 +354,25 @@ contour_fn  = function(data, mapping, size_adjust = 1, monochrome = FALSE, ...){
     colorby = matchcall$colorby
     threshold = matchcall$threshold
     rownumber = nrow(data)
+    noise = matchcall$noise
+    dropzero = matchcall$dropzero
+    dropped = 0
     ## remove ggplot warning about threshold being an aesthetic
     mapping$threshold = NULL
+    charmap = gsub( '~', '', as.character(mapping))
+    print(charmap)
+    x = charmap[[1]]
+    y = charmap[[2]]
+    if (dropzero ) {
+        missing = data[, x] == 0 & data[, y] == 0
+        print(head(missing))
+        print(dim(data))
+        data = data[ ! missing,  ]
+        print(dim(data))
+        dropped = length(which(missing))
+        print(dropped)
+    }
+    data = add_noise(data, noise)
     p <- ggplot(data = data, mapping = mapping) +
         stat_density_2d(aes(fill = log2( stat(level) )  , alpha = ..level..  ) , bins = rownumber /55, geom = 'polygon')
     ## colors are tricky, have to see if color variable is continuous or factor
@@ -360,8 +390,9 @@ contour_fn  = function(data, mapping, size_adjust = 1, monochrome = FALSE, ...){
 ## plot points, color by chosen color
 
 ##points_fn = function(data, mapping,  colorby = NULL, size_adjust = 1, monochrome = FALSE,  ...) {
+
 points_fn = function(data, mapping, ...) {
-    ## I don't fucking believe I have to do this
+    print('points_fn')
 ################################################################
     ## painfully extract function arguments from referenced
     ##GGally::wrap()
@@ -371,17 +402,38 @@ points_fn = function(data, mapping, ...) {
     size_adjust = matchcall$size_adjust
     colorby = matchcall$colorby
     threshold = matchcall$threshold
-    ################################################################
+    noise = matchcall$noise
+    dropzero = matchcall$dropzero
+    dropped = 0
+################################################################
+    charmap = gsub( '~', '', as.character(mapping))
+    print(charmap)
+    x = charmap[[1]]
+    y = charmap[[2]]
+    if (dropzero) {
+        missing = data[, x] == 0 & data[, y] == 0
+        print(head(missing))
+        print(dim(data))
+        data = data[ ! missing,  ]
+        print(dim(data))
+        dropped = length(which(missing))
+        print(dropped)
+    }
+    odata = data
+    data = add_noise(data, noise)
+################################################################
     ##print(paste('size_adjust', size_adjust) )
     ##print(paste('colorby', colorby) )
     point_size = 12 * size_adjust
     ##print(mapping)
     ## remove ggplot warning about threshold being an aesthetic
     mapping$threshold = NULL
+    mapping$dropzero = NULL
+    mapping$noise = NULL
     p = ggplot(data = data, mapping = mapping) +
         geom_point(aes_string(fill = colorby), color = 'grey80', size = point_size, shape = 21, alpha = 0.5)
     p = add_continuous_labels(p, size_adjust = size_adjust)
-    p = add_continuous_quadrants(p, size_adjust = size_adjust, threshold = threshold)
+    p = add_continuous_quadrants(p, size_adjust = size_adjust, threshold = threshold, dropped = dropped)
     p = add_gate_line(p, threshold = threshold)
     if(   is.factor(data[ , colorby]) ) {
         p = p + scale_fill_viridis(option = 'plasma', discrete = TRUE)
@@ -396,6 +448,7 @@ points_fn = function(data, mapping, ...) {
 
 ##points_and_contour_fn  = function(data, mapping, colorby = NULL, size_adjust = 1, monochrome = FALSE, point_size = default_point_size, ...) {
 points_and_contour_fn  = function(data, mapping, ...) {
+    print('points_and_contour_fn')
     ## I don't fucking believe I have to do this
 ################################################################
     ## painfully extract function arguments from referenced
@@ -406,11 +459,25 @@ points_and_contour_fn  = function(data, mapping, ...) {
     size_adjust = matchcall$size_adjust
     colorby = matchcall$colorby
     threshold = matchcall$threshold
+    noise = matchcall$noise
+    dropzero = matchcall$dropzero
+    dropped = 0
     ################################################################
     ##print("points_and_contour_fn")
     charmap = gsub( '~', '', as.character(mapping))
+    print(charmap)
     x = charmap[[1]]
     y = charmap[[2]]
+    if (dropzero ) {
+        missing = data[, x] == 0 & data[, y] == 0
+        print(head(missing))
+        print(dim(data))
+        data = data[ ! missing,  ]
+        print(dim(data))
+        dropped = length(which(missing))
+        print(dropped)
+    }
+    data = add_noise(data, noise)
     point_size = 12 * size_adjust
     data$density = get_density( data[, x ]  , data[, y ], n = 300 )
     rownumber = nrow(data)
@@ -431,6 +498,7 @@ points_and_contour_fn  = function(data, mapping, ...) {
 ## plot points by density
 
 points_density_fn = function(data, mapping, ...){
+    print('points_density_fn')
     ## I don't fucking believe I have to do this
     ################################################################
     ## painfully extract function arguments from referenced
@@ -441,7 +509,24 @@ points_density_fn = function(data, mapping, ...){
     size_adjust = matchcall$size_adjust
     colorby = matchcall$colorby
     threshold = matchcall$threshold
+    noise = matchcall$noise
+    dropzero = matchcall$dropzero
+    dropped = 0
 ################################################################
+    charmap = gsub( '~', '', as.character(mapping))
+    print(charmap)
+    x = charmap[[1]]
+    y = charmap[[2]]
+    if (dropzero ) {
+        missing = data[, x] == 0 & data[, y] == 0
+        print(head(missing))
+        print(dim(data))
+        data = data[ ! missing,  ]
+        print(dim(data))
+        dropped = length(which(missing))
+        print(dropped)
+    }
+    data = add_noise(data, noise)
     point_size = 12 * size_adjust
     ##print("points_density_fn")
     ##print(mapping)
@@ -455,7 +540,7 @@ points_density_fn = function(data, mapping, ...){
         geom_point(aes(fill = log2(density) ), color = "white", alpha = 0.3, size = point_size, shape = 21, color = "black" )
     p = p + scale_fill_viridis(option = 'plasma')
     p = add_continuous_labels(p, size = size_adjust)
-    p = add_continuous_quadrants(p, size = size_adjust, threshold = threshold)
+    p = add_continuous_quadrants(p, size = size_adjust, threshold = threshold, dropped = dropped)
     p = add_gate_line(p, threshold = threshold)
     p
 }
