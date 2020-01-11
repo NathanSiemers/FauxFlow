@@ -1,5 +1,5 @@
-git commit -a
-git push origin master
+git commit -a -m update
+#git push origin master
 git push github master
 rsync -av *.R template.docx *.Rmd restart.txt lib ../SCHCC/
 rsync -av *.R template.docx *.Rmd restart.txt lib ../SCBlood/
