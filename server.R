@@ -248,9 +248,10 @@ shinyServer (
         ## but if the above works
         ## why not this
         ## oh jesus, note the extra () to trigger the function call :( :(
-
-        observeEvent( input$go, {
-                    output$plot1 = renderPlot({  fun_plot1(input)  }) })
+        p = eventReactive( input$go, { fun_plot1(input) } )
+        output$plot1 = renderPlot({  p()  })
+        ##observeEvent( input$go, {
+        ##            output$plot1 = renderPlot({  fun_plot1(input)  }) })
 ##        output$plot1 = renderPlot({  eventReactive( input$go, { fun_plot1(input) } )()  })
         output$table1 =
             renderTable({  eventReactive( input$go, {
